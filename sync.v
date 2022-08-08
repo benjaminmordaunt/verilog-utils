@@ -19,7 +19,7 @@ module sync
 (
 	input wire clock,
 	input wire i_nrst,
-	input wire i_async
+	input wire i_async,
 	output wire o_sync
 );
 	localparam SYNC_MSB = SYNC_BUF_LEN - 1;

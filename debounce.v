@@ -25,7 +25,7 @@ module debounce
 	input wire clock,
 	input wire i_nrst,
 	input wire i_in,
-	output reg o_out,
+	output reg o_out
 );
 
 	localparam COUNTER_BITS = $clog2(MAX_COUNT);
