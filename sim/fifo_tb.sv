@@ -9,6 +9,12 @@
 //   Test a 4-deep FIFO.
 // -------------------------------------------
 
+// -----------------------------------------------------
+// Control FIFO depth and therefore number of iterations
+// in test-bench
+// -----------------------------------------------------
+`define FIFO_TB_DEPTH 5
+
 module fifo_tb;
     
 reg clk, nreset;
@@ -23,7 +29,9 @@ wire write_ready;
 reg write_valid;
 reg [7:0] write_data;
 
-fifo dut (
+fifo #(
+    .FIFO_DEPTH(`FIFO_TB_DEPTH)
+) dut (
     .i_clock(clk),
     .i_nreset(nreset),
     .i_read_ready(read_ready),
@@ -34,13 +42,10 @@ fifo dut (
     .i_write_data(write_data)
 );
 
-always
+initial
 begin
-    clk = 1'b1;
-    #1;
-    
-    clk = 1'b0;
-    #1;
+    clk = 0;
+    #10 forever #10 clk = !clk;
 end
 
 integer fifo_cyl;
@@ -50,24 +55,27 @@ begin
     write_valid = 0;
     write_data = 8'b0;
 
-    $display("Entering reset...");
     nreset = 0;
-    #2;
+    #10;
     nreset = 1;
-    #2;
+    #20;
     
-    $display("Placing '12' on write_data...");
     write_data = 8'd12;
-    #2;
-    
-    $display("Setting write_valid...");
+    #20;
     write_valid = 1;
     
     // Wait 4 clock cycles (depth of FIFO)
-    for (fifo_cyl = 0; fifo_cyl < 5; fifo_cyl = fifo_cyl + 1) begin
-        #2;
+    for (fifo_cyl = 0; fifo_cyl < `FIFO_TB_DEPTH; fifo_cyl = fifo_cyl + 1) begin
+        #20;
         $display("Cycle %d: RValid: %b, RData: %b", fifo_cyl, read_valid, read_data);
     end
+
+    $stop;
 end
+
+// -----------------------------------------------------------------------------
+// (SVA) Ensure that read_valid asserts FIFO_TB_DEPTH cycles after write_valid
+// -----------------------------------------------------------------------------
+assert property (@(posedge clk) write_valid |-> ##(`FIFO_TB_DEPTH) read_valid);
 
 endmodule
